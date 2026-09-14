@@ -12,7 +12,7 @@ namespace PipelineTemplate.Application.Composition;
 /// composition is linear only.
 /// </summary>
 /// <remarks>
-/// Each call to <see cref="AddFilter{TNext}(IFilter{TCurrent, TNext}, IErrorPolicy?)"/>
+/// Each call to <see cref="AddFilter{TNext}(IFilter{TCurrent, TNext}, IErrorPolicy?, string?)"/>
 /// returns a <em>new</em> builder rather than mutating this one, so a partially-built
 /// pipeline can be safely reused as a starting point for more than one variant. This
 /// is Application-layer orchestration: it composes Domain-layer <see cref="IFilter{TIn, TOut}"/>
@@ -22,7 +22,7 @@ namespace PipelineTemplate.Application.Composition;
 /// <typeparam name="TIn">The type the overall pipeline accepts as input.</typeparam>
 /// <typeparam name="TCurrent">
 /// The type the pipeline currently produces — i.e. what the next
-/// <see cref="AddFilter{TNext}(IFilter{TCurrent, TNext}, IErrorPolicy?)"/> call must
+/// <see cref="AddFilter{TNext}(IFilter{TCurrent, TNext}, IErrorPolicy?, string?)"/> call must
 /// accept.
 /// </typeparam>
 public sealed class PipelineBuilder<TIn, TCurrent>
@@ -47,7 +47,10 @@ public sealed class PipelineBuilder<TIn, TCurrent>
     /// <summary>
     /// Adds a filter to the pipeline. The pipeline's default error policy applies
     /// unless <paramref name="errorPolicy"/> overrides it for this stage — see
-    /// ADR-0006.
+    /// ADR-0006. The stage's display name (used in exception messages and reported to
+    /// the observer) defaults to the filter's type name; supply
+    /// <paramref name="stageName"/> to override it — useful when the same filter type
+    /// is reused for several differently-named stages in one pipeline.
     /// </summary>
     /// <exception cref="NotSupportedException">
     /// The resolved policy is <see cref="SkipAndContinuePolicy"/> and
@@ -58,17 +61,18 @@ public sealed class PipelineBuilder<TIn, TCurrent>
     /// </exception>
     public PipelineBuilder<TIn, TNext> AddFilter<TNext>(
         IFilter<TCurrent, TNext> filter,
-        IErrorPolicy? errorPolicy = null)
+        IErrorPolicy? errorPolicy = null,
+        string? stageName = null)
     {
         ArgumentNullException.ThrowIfNull(filter);
 
         var policy = errorPolicy ?? _defaultPolicy;
-        var stageName = filter.GetType().Name;
+        var resolvedStageName = stageName ?? filter.GetType().Name;
 
         if (policy is SkipAndContinuePolicy && filter is not ISkipAndContinueCapable)
         {
             throw new NotSupportedException(
-                $"The filter '{stageName}' cannot use SkipAndContinue because it does not " +
+                $"The filter '{resolvedStageName}' cannot use SkipAndContinue because it does not " +
                 $"implement {nameof(ISkipAndContinueCapable)}. Derive from " +
                 $"{nameof(TransformFilter<TCurrent, TNext>)}<{typeof(TCurrent).Name},{typeof(TNext).Name}> " +
                 "for ordinary one-in-one-out filters, which supports this automatically, or implement " +
@@ -79,7 +83,7 @@ public sealed class PipelineBuilder<TIn, TCurrent>
 
         if (filter is ISkipAndContinueCapable capable)
         {
-            capable.Configure(policy, _observer, stageName);
+            capable.Configure(policy, _observer, resolvedStageName);
         }
 
         var upstreamCompose = _compose;
@@ -96,14 +100,16 @@ public sealed class PipelineBuilder<TIn, TCurrent>
     /// <summary>Adds a synchronous 1:1 transform as a filter, via <see cref="DelegateTransformFilter{TIn, TOut}"/>.</summary>
     public PipelineBuilder<TIn, TNext> AddFilter<TNext>(
         Func<TCurrent, TNext> transform,
-        IErrorPolicy? errorPolicy = null)
-        => AddFilter(new DelegateTransformFilter<TCurrent, TNext>(transform), errorPolicy);
+        IErrorPolicy? errorPolicy = null,
+        string? stageName = null)
+        => AddFilter(new DelegateTransformFilter<TCurrent, TNext>(transform), errorPolicy, stageName);
 
     /// <summary>Adds an asynchronous 1:1 transform as a filter, via <see cref="DelegateTransformFilter{TIn, TOut}"/>.</summary>
     public PipelineBuilder<TIn, TNext> AddFilter<TNext>(
         Func<TCurrent, CancellationToken, Task<TNext>> transform,
-        IErrorPolicy? errorPolicy = null)
-        => AddFilter(new DelegateTransformFilter<TCurrent, TNext>(transform), errorPolicy);
+        IErrorPolicy? errorPolicy = null,
+        string? stageName = null)
+        => AddFilter(new DelegateTransformFilter<TCurrent, TNext>(transform), errorPolicy, stageName);
 
     /// <summary>
     /// Returns a builder with a new default error policy, applied to filters added

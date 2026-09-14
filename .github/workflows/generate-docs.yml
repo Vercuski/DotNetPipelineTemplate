@@ -1,0 +1,46 @@
+name: Generate Documentation
+
+# Regenerates Pipeline_Template_Documentation.md from the XML doc comments in the
+# Domain, Application, and Infrastructure layers (see
+# tools/PipelineTemplate.DocGenerator), and commits it back to main if it changed.
+#
+# Loop prevention: the commit this workflow makes includes "[skip ci]", which GitHub
+# Actions honors natively and won't re-trigger any workflow for. The `if` guard below
+# is a second, explicit line of defense against a doc-generation loop specifically,
+# in case that convention ever stops applying.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Generate documentation
+        run: dotnet run --project tools/PipelineTemplate.DocGenerator -- "${{ github.workspace }}"
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Pipeline_Template_Documentation.md
+          if git diff --cached --quiet; then
+            echo "Documentation is already up to date — nothing to commit."
+          else
+            git commit -m "docs: regenerate Pipeline_Template_Documentation.md [skip ci]"
+            git push
+          fi

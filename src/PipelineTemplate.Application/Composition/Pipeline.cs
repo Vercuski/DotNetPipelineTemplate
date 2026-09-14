@@ -33,7 +33,7 @@ public static class Pipeline
     /// </summary>
     /// <param name="defaultErrorPolicy">
     /// The pipeline-wide default error policy, overridable per filter via
-    /// <see cref="PipelineBuilder{TIn, TCurrent}.AddFilter{TNext}(Domain.Filters.IFilter{TCurrent, TNext}, IErrorPolicy?)"/>.
+    /// <see cref="PipelineBuilder{TIn, TCurrent}.AddFilter{TNext}(Domain.Filters.IFilter{TCurrent, TNext}, IErrorPolicy?, string?)"/>.
     /// Defaults to <see cref="FailFastPolicy"/> if not supplied.
     /// </param>
     /// <param name="observer">

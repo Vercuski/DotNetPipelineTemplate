@@ -76,6 +76,35 @@ public class ErrorHandlingTests
             Pipeline.Create<int>().AddFilter(new NonCooperativeDoublingFilter(), SkipAndContinuePolicy.Instance));
     }
 
+    [Fact]
+    public async Task Explicit_StageName_Overrides_The_Filters_Type_Name()
+    {
+        // Reusing one filter type for several differently-named stages (e.g. a
+        // generic "BuildStepFilter" standing in for Restore/Build/Test/...) needs the
+        // reported stage name to reflect that configuration, not just the type name —
+        // otherwise every stage looks identical in errors and observability.
+        var observer = new RecordingObserver();
+
+        var pipeline = Pipeline.Create<int>(defaultErrorPolicy: SkipAndContinuePolicy.Instance, observer: observer)
+            .AddFilter(x =>
+            {
+                if (x == 2)
+                {
+                    throw new InvalidOperationException("boom");
+                }
+
+                return x;
+            }, stageName: "CustomStageName")
+            .Build();
+
+        await foreach (var _ in pipeline.RunAsync(Source(1, 2, 3)))
+        {
+            // draining
+        }
+
+        Assert.Equal("CustomStageName", Assert.Single(observer.Faults).StageName);
+    }
+
     /// <summary>
     /// A hand-written filter implementing <see cref="IFilter{TIn, TOut}"/> directly,
     /// without going through <see cref="TransformFilter{TIn, TOut}"/> and without
@@ -98,12 +127,12 @@ public class ErrorHandlingTests
     private sealed class RecordingObserver : IPipelineObserver
     {
         public int ItemsProcessed { get; private set; }
-        public List<(Exception Exception, bool WillContinue)> Faults { get; } = new();
+        public List<(Exception Exception, bool WillContinue, string StageName)> Faults { get; } = new();
 
         public void OnItemProcessed(string stageName, TimeSpan duration) => ItemsProcessed++;
 
         public void OnItemFaulted(string stageName, Exception exception, bool willContinue)
-            => Faults.Add((exception, willContinue));
+            => Faults.Add((exception, willContinue, stageName));
     }
 
     private static async IAsyncEnumerable<T> Source<T>(params T[] items)

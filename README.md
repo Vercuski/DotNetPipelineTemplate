@@ -6,7 +6,10 @@ packaged as an importable Visual Studio 2026 project template.
 Full architecture rationale — vision, requirements, C4 diagrams, and every ADR
 and trade study referenced in code comments below — lives in the companion
 Obsidian vault, not in this repo. This README covers only what's needed to
-build, test, and try this code.
+build, test, and try this code. API documentation generated from the source's
+own XML doc comments lives in
+[`Pipeline_Template_Documentation.md`](./Pipeline_Template_Documentation.md),
+regenerated automatically on every push to `main`.
 
 ## Status
 
@@ -42,6 +45,10 @@ src/PipelineTemplate.Core/            A thin facade — no source of its own,
 
 tests/PipelineTemplate.Core.Tests/    Unit + integration tests, plus
                                        Architecture/ (NetArchTest layer checks)
+tests/PipelineTemplate.Samples.Tests/ Validates the two sample pipelines below
+                                       against architecture-vision.md §6
+samples/PipelineTemplate.Samples.Telemetry/  A telemetry-processing sample
+samples/PipelineTemplate.Samples.CiCd/       A CI/CD-style build pipeline sample
 templates/PipelineTemplate.Template/  The dotnet new / VS2026 template package
 .github/workflows/ci.yml              This repo's own build (not the workflow
                                        scaffolded into a generated solution —
@@ -57,12 +64,13 @@ dotnet build
 dotnet test
 ```
 
-13 tests currently cover: multi-filter composition, sync and async delegate
+19 tests currently cover: multi-filter composition, sync and async delegate
 filters, FailFast propagation, SkipAndContinue fault isolation (and the
 `NotSupportedException` guard for filters that haven't opted into it), 1:many
 and many:1 cardinality (proving the core contract's genericity claim), DI
-resolution composing with the existing API, and three architecture tests
-enforcing the Domain → Application → Infrastructure dependency direction.
+resolution composing with the existing API, explicit stage-name overrides,
+three architecture tests enforcing the Domain → Application → Infrastructure
+dependency direction, and five tests validating the sample pipelines below.
 
 ## Trying the template locally
 
@@ -97,6 +105,59 @@ effect, either bump the version or clear the relevant folder(s) under
 `~/.nuget/packages/dotnetpipelinetemplate.*` and restore with `--force`. This
 bit us once already during development — a "successful" build turned out to
 be silently testing stale, pre-refactor code.
+
+## Trying the sample pipelines
+
+Two samples live under `samples/`, validated by `tests/PipelineTemplate.Samples.Tests/`
+— they exist specifically to prove the genericity and mixed-policy claims in
+`architecture-vision.md` §6, not just to look nice:
+
+```bash
+dotnet run --project samples/PipelineTemplate.Samples.Telemetry
+dotnet run --project samples/PipelineTemplate.Samples.CiCd
+```
+
+- **Telemetry** (`ParseTelemetryLineFilter` + `WindowAggregationFilter`): a
+  `SkipAndContinue`-driven parser tolerating malformed input lines, feeding a
+  hand-written many:1 windowing filter — real windowing/aggregation against
+  the raw `IFilter<TIn,TOut>` contract, not the toy int-summing example in
+  the core test suite.
+- **CI/CD** (`BuildStepFilter` × 5 via `CiCdPipelineFactory`): one reusable
+  filter class standing in for Restore/Build/Test/Package/Notify, proving
+  `FailFast` (the pipeline default) and a per-stage `SkipAndContinue`
+  override (on Notify only) genuinely coexist in one pipeline — exactly the
+  ADR-0006 scenario the vision's success criteria call for.
+
+Building these surfaced a real gap: `PipelineBuilder.AddFilter` never
+actually implemented the explicit stage-name override that
+`ErrorContext.StageName`'s own XML doc already promised — every stage
+silently fell back to the filter's type name, which broke the moment one
+filter class got reused for several named stages. Fixed by adding an
+optional `stageName` parameter to all three `AddFilter` overloads.
+
+## Generated API documentation
+
+`Pipeline_Template_Documentation.md` is generated from the XML doc comments on
+every public type in the Domain, Application, and Infrastructure layers — not
+hand-written, and not meant to be edited directly. `.github/workflows/generate-docs.yml`
+regenerates and commits it automatically on every push to `main`. To run it
+locally:
+
+```bash
+dotnet run --project tools/PipelineTemplate.DocGenerator -- "$(pwd)"
+```
+
+It's built on Roslyn's semantic model (`Microsoft.CodeAnalysis.CSharp`) rather
+than reflecting over compiled assemblies and pattern-matching XML doc IDs —
+the latter is a well-known fragile approach (getting the ID string exactly
+right for every generic method/constructor shape is its own small compiler),
+whereas `ISymbol.GetDocumentationCommentXml()` gets the correct, fully-resolved
+doc comment for any symbol directly from the compiler, with no ID matching of
+its own to get wrong.
+
+Samples and the Core facade are deliberately out of scope for this doc: Core
+has no source of its own, and samples exist to validate the template, not to
+be part of its distributed public API.
 
 ## Known open decisions (deliberately deferred, not forgotten)
 
