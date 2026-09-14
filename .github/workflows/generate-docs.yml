@@ -3,6 +3,7 @@ name: Generate Documentation
 # Regenerates Pipeline_Template_Documentation.md from the XML doc comments in the
 # Domain, Application, and Infrastructure layers (see
 # tools/PipelineTemplate.DocGenerator), and commits it back to main if it changed.
+# Runs on every push to main, or on demand via the Actions tab / workflow_dispatch.
 #
 # Loop prevention: the commit this workflow makes includes "[skip ci]", which GitHub
 # Actions honors natively and won't re-trigger any workflow for. The `if` guard below
@@ -12,6 +13,7 @@ name: Generate Documentation
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write

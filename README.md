@@ -9,7 +9,8 @@ Obsidian vault, not in this repo. This README covers only what's needed to
 build, test, and try this code. API documentation generated from the source's
 own XML doc comments lives in
 [`Pipeline_Template_Documentation.md`](./Pipeline_Template_Documentation.md),
-regenerated automatically on every push to `main`.
+regenerated automatically on every push to `main` (or on demand via the
+Actions tab).
 
 ## Status
 
@@ -140,7 +141,8 @@ optional `stageName` parameter to all three `AddFilter` overloads.
 `Pipeline_Template_Documentation.md` is generated from the XML doc comments on
 every public type in the Domain, Application, and Infrastructure layers — not
 hand-written, and not meant to be edited directly. `.github/workflows/generate-docs.yml`
-regenerates and commits it automatically on every push to `main`. To run it
+regenerates and commits it automatically on every push to `main`, and can
+also be run on demand from the Actions tab (`workflow_dispatch`). To run it
 locally:
 
 ```bash
