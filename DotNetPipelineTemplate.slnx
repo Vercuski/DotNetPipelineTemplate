@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PipelineTemplate.Application/PipelineTemplate.Application.csproj" />
+    <Project Path="src/PipelineTemplate.Core/PipelineTemplate.Core.csproj" />
+    <Project Path="src/PipelineTemplate.Domain/PipelineTemplate.Domain.csproj" />
+    <Project Path="src/PipelineTemplate.Infrastructure/PipelineTemplate.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PipelineTemplate.Core.Tests/PipelineTemplate.Core.Tests.csproj" />
+  </Folder>
+</Solution>

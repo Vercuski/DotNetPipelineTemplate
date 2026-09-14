@@ -1,0 +1,46 @@
+name: CI
+
+# Builds and tests THIS repository (the Core Library, Test Suite, and Template
+# Package) — see ADR-0002. This is distinct from the workflow file scaffolded
+# into a consumer's generated solution at templates/PipelineTemplate.Template,
+# which builds *that* solution instead.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx"
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/test-results.trx'
+
+      # TODO (Phase 1, follow-up): add a package/pack step once the NuGet package
+      # identity is finalized (architecture-vision.md open question: `dotnet new`
+      # short name / package identity), and an API-compat check per
+      # api-specification-guide.md §4 once there's a public surface to diff against.

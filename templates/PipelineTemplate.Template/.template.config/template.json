@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Scott Vercuski",
+  "classifications": ["Common", "Library"],
+  "identity": "DotNetPipelineTemplate.PipesAndFilters",
+  "name": "DotNet Pipeline Template (Pipes and Filters)",
+  "_comment_shortName": "PLACEHOLDER — architecture-vision.md §10 lists the final `dotnet new` short name as a still-open decision. 'pipefilter' is provisional so this template is installable during Phase 1 development; rename before any real release.",
+  "shortName": "pipefilter",
+  "sourceName": "PipelineApp",
+  "preferNameDirectory": true,
+  "symbols": {
+    "IncludeSampleFilter": {
+      "type": "parameter",
+      "datatype": "bool",
+      "defaultValue": "true",
+      "description": "Include a trivial pass-through sample filter and a minimal pipeline in Program.cs to demonstrate usage. See architecture-vision.md §10 — this parameter exists specifically so that open question doesn't need a single fixed answer: a consumer can opt out with --IncludeSampleFilter false."
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "condition": "(!IncludeSampleFilter)",
+          "exclude": ["Filters/**"]
+        }
+      ]
+    }
+  ]
+}

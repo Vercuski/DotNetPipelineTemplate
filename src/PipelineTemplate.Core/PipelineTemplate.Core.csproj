@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\PipelineTemplate.Domain\PipelineTemplate.Domain.csproj" />
+    <ProjectReference Include="..\PipelineTemplate.Application\PipelineTemplate.Application.csproj" />
+    <ProjectReference Include="..\PipelineTemplate.Infrastructure\PipelineTemplate.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!--
+      PLACEHOLDER package identity — architecture-vision.md §10 lists the final
+      `dotnet new` short name / package identity as a still-open decision. This
+      PackageId is chosen only to match the placeholder PackageReference already
+      in templates/PipelineTemplate.Template/PipelineApp.csproj, so the two are at
+      least consistent with each other during Phase 1. Rename when that decision
+      is made.
+    -->
+    <PackageId>DotNetPipelineTemplate.Core</PackageId>
+    <Version>1.0.0</Version>
+    <Description>Generic, domain-agnostic Pipes and Filters implementation for .NET 10 — a thin facade over the Domain/Application/Infrastructure layers, so consumers reference one package.</Description>
+  </PropertyGroup>
+
+  <!--
+    This project is deliberately a pure facade: no source files of its own, just
+    ProjectReferences to the three layer projects. It exists so external consumers
+    have one package/short-name to reference (see the PLACEHOLDER note above),
+    while the actual code stays organized by Clean Architecture layer for
+    maintainers. `dotnet pack` on this project pulls in Domain/Application/
+    Infrastructure as package dependencies automatically, since they're also
+    packable (each has its own PackageId) — see local-nuget-feed/ and the README
+    for the Phase 1 local-testing workflow, which now packs all four.
+  -->
+
+</Project>

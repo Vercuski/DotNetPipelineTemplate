@@ -1,0 +1,33 @@
+name: CI
+
+# Default CI/CD workflow scaffolded into your new pipeline solution (ADR-0002:
+# GitHub Actions is this template's default CI/CD platform). Customize freely —
+# this is a starting point, not a fixed requirement.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Build container image
+        run: docker build -t pipeline-app:${{ github.sha }} .

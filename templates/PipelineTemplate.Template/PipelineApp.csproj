@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      PLACEHOLDER package identity — architecture-vision.md §10 lists the final
+      package name as a still-open decision. For Phase 1 development, this resolves
+      against the local feed at ../../local-nuget-feed (see the repo-root
+      NuGet.config) rather than nuget.org, since the package isn't published yet.
+      Swap the version constraint once a real published version exists.
+    -->
+    <PackageReference Include="DotNetPipelineTemplate.Core" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>

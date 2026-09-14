@@ -1,0 +1,17 @@
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn> <!-- missing XML doc comment: tightened per-project as public surface stabilizes -->
+    <Authors>Scott Vercuski</Authors>
+    <Company>Scott Vercuski</Company>
+    <Product>DotNet Pipeline Template</Product>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+
+</Project>

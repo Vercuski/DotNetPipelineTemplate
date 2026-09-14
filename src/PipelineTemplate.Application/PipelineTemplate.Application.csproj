@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\PipelineTemplate.Domain\PipelineTemplate.Domain.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- PLACEHOLDER package identity — see PipelineTemplate.Core.csproj for the full note. -->
+    <PackageId>DotNetPipelineTemplate.Application</PackageId>
+    <Version>1.0.0</Version>
+    <Description>Orchestration for the Pipes and Filters pattern — composition, execution, and the default observability adapter.</Description>
+  </PropertyGroup>
+
+</Project>
