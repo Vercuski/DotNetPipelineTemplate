@@ -90,13 +90,23 @@ dotnet pack src/PipelineTemplate.Core/PipelineTemplate.Core.csproj -c Release -o
 # 2. Install the template
 dotnet new install ./templates/PipelineTemplate.Template
 
-# 3. Scaffold a project (copy the repo-root NuGet.config into it so the
-#    PackageReference resolves against the local feed)
+# 3. Scaffold a project and restore explicitly against the local feed + nuget.org
 dotnet new pipefilter -n MyPipeline
-cp NuGet.config MyPipeline/
 cd MyPipeline
+dotnet restore --source ../local-nuget-feed --source https://api.nuget.org/v3/index.json
 dotnet run
 ```
+
+There's deliberately no repo-root `NuGet.config` for this — a config file at
+the repo root would apply to *every* project's restore (via NuGet's directory
+walk-up), including this repo's own CI builds, which don't need the local
+feed and don't have it populated. An earlier version of this README had one,
+and it broke the `generate-docs` GitHub Action on every run with
+`NU1301: The local source '.../local-nuget-feed' doesn't exist` — a
+freshly-cloned CI runner never has that folder populated, only a local dev
+machine that's run the `dotnet pack` commands above. The explicit `--source`
+flags above scope the local feed to only the one restore that actually needs
+it.
 
 **Gotcha worth knowing**: if you change a layer's public API and re-pack
 without bumping the version, NuGet's global package cache
