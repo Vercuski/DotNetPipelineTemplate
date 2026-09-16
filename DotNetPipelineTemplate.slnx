@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/benchmarks/">
+    <Project Path="benchmarks/PipelineTemplate.Benchmarks/PipelineTemplate.Benchmarks.csproj" />
+  </Folder>
   <Folder Name="/samples/">
     <Project Path="samples/PipelineTemplate.Samples.CiCd/PipelineTemplate.Samples.CiCd.csproj" />
     <Project Path="samples/PipelineTemplate.Samples.Telemetry/PipelineTemplate.Samples.Telemetry.csproj" />

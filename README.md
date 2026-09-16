@@ -146,6 +146,28 @@ silently fell back to the filter's type name, which broke the moment one
 filter class got reused for several named stages. Fixed by adding an
 optional `stageName` parameter to all three `AddFilter` overloads.
 
+## Performance benchmarks
+
+`benchmarks/PipelineTemplate.Benchmarks` uses BenchmarkDotNet to answer
+the questions ADR-0005 and `non-functional-requirements.md` §1 left as
+TBD: how much overhead the pipeline framework adds per filter hop, and
+what real throughput looks like against the actual Telemetry sample
+(not a synthetic toy). Run it with:
+
+```bash
+dotnet run --project benchmarks/PipelineTemplate.Benchmarks -c Release -- --filter "*"
+```
+
+BenchmarkDotNet requires Release; it refuses to run otherwise. Current
+results (measured on a single shared, weak logical core — see the NFR
+doc for the full numbers and the measurement-environment caveat):
+framework overhead is ≈100 ns and ≈72 bytes allocated per item per hop,
+constant regardless of chain length, and attaching a real observer
+costs nothing statistically distinguishable from noise. The Telemetry
+sample sustains ≈655,000 items/sec (mean) end to end. Re-run on real
+target hardware before treating the throughput figure as a capacity
+number rather than a sanity check.
+
 ## Generated API documentation
 
 `Pipeline_Template_Documentation.md` is generated from the XML doc comments on
