@@ -14,12 +14,12 @@ Actions tab).
 
 ## Status
 
-**Phase 1 (Foundation & Core Pattern)** — in progress. The core library
-(filter contract, fluent composition API, error-handling policies) is
-implemented and tested, organized as Clean Architecture layers. The Template
-Package installs and scaffolds a working project. Not yet done: fan-out/fan-in
-(Phase 3), a declarative authoring layer, and the three still-open decisions
-noted below.
+**Phases 1, 2, and 3 are complete.** The core library (filter contract,
+fluent composition API, error-handling policies, fan-out/fan-in) is
+implemented and tested, organized as Clean Architecture layers. The
+Template Package installs and scaffolds a working project. Not yet done:
+general (non-1:1) fan-out/fan-in topologies, a declarative authoring
+layer, and the two still-open decisions noted below.
 
 ## Structure
 
@@ -65,13 +65,15 @@ dotnet build
 dotnet test
 ```
 
-19 tests currently cover: multi-filter composition, sync and async delegate
+26 tests currently cover: multi-filter composition, sync and async delegate
 filters, FailFast propagation, SkipAndContinue fault isolation (and the
 `NotSupportedException` guard for filters that haven't opted into it), 1:many
 and many:1 cardinality (proving the core contract's genericity claim), DI
 resolution composing with the existing API, explicit stage-name overrides,
+fan-out/fan-in (merge correctness, error-policy integration, cardinality
+guards, and real concurrency — not just sequential execution dressed up),
 three architecture tests enforcing the Domain → Application → Infrastructure
-dependency direction, and five tests validating the sample pipelines below.
+dependency direction, and six tests validating the sample pipelines below.
 
 ## Trying the template locally
 
@@ -133,11 +135,13 @@ dotnet run --project samples/PipelineTemplate.Samples.CiCd
   hand-written many:1 windowing filter — real windowing/aggregation against
   the raw `IFilter<TIn,TOut>` contract, not the toy int-summing example in
   the core test suite.
-- **CI/CD** (`BuildStepFilter` × 5 via `CiCdPipelineFactory`): one reusable
-  filter class standing in for Restore/Build/Test/Package/Notify, proving
-  `FailFast` (the pipeline default) and a per-stage `SkipAndContinue`
-  override (on Notify only) genuinely coexist in one pipeline — exactly the
-  ADR-0006 scenario the vision's success criteria call for.
+- **CI/CD** (`BuildStepFilter` + `ParallelCheckFilter` via `CiCdPipelineFactory`):
+  `Restore → Build → ParallelChecks → Package → Notify`. `ParallelChecks` fans
+  out to three concurrent checks (`FanOutFilter`, ADR-0009) and fans back in
+  via "all must pass"; `Notify` is overridden to `SkipAndContinue`. One
+  pipeline demonstrating fan-out/fan-in, `FailFast`, and `SkipAndContinue`
+  all coexisting — exactly the ADR-0006/ADR-0009 scenario the vision's
+  success criteria call for.
 
 Building these surfaced a real gap: `PipelineBuilder.AddFilter` never
 actually implemented the explicit stage-name override that
@@ -145,6 +149,15 @@ actually implemented the explicit stage-name override that
 silently fell back to the filter's type name, which broke the moment one
 filter class got reused for several named stages. Fixed by adding an
 optional `stageName` parameter to all three `AddFilter` overloads.
+
+`FanOutFilter` (Phase 3, ADR-0009) is worth calling out specifically: it
+required zero changes to `PipelineBuilder`, `Pipeline`, or `IFilter` — it's
+a new filter type that plugs into the existing `AddFilter(...)` call like
+any other filter, inheriting error-policy resolution and observability for
+free. That's the concrete proof of ADR-0004's forward-compatibility promise,
+not just a claim about it. Branches are scoped to 1:1 cardinality in this
+version — see the type's XML doc remarks for why the general case is a
+substantially harder problem deliberately left for if a real need shows up.
 
 ## Performance benchmarks
 

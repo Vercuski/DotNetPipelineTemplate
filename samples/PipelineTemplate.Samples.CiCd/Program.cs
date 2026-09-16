@@ -13,21 +13,23 @@ await foreach (var result in healthyBuildPipeline.RunAsync(Source(solution)))
     Console.WriteLine($"Pipeline completed all steps: {string.Join(", ", result.CompletedSteps)}");
 }
 Console.WriteLine(
-    "Pipeline finished without throwing — Restore/Build/Test/Package all ran for " +
-    "real; only the Notify step's failure was swallowed (SkipAndContinue), matching " +
-    "how a real CI system treats a failed Slack webhook as a warning, not a build " +
-    "failure. No item is printed above because this simple sample only surfaces the " +
-    "final BuildContext, and that one build's context was 'skipped' at the last " +
-    "stage — a production version would branch its output shape once fan-out lands.");
+    "Pipeline finished without throwing — Restore/Build/ParallelChecks/Package all " +
+    "ran for real; only the Notify step's failure was swallowed (SkipAndContinue), " +
+    "matching how a real CI system treats a failed Slack webhook as a warning, not a " +
+    "build failure. No item is printed above because this simple sample only " +
+    "surfaces the final BuildContext, and that one build's context was 'skipped' at " +
+    "the last stage.");
 
 Console.WriteLine();
-Console.WriteLine("=== Scenario 2: a broken test step ===");
-var brokenBuildPipeline = CiCdPipelineFactory.Create(simulateTestFailure: true);
+Console.WriteLine("=== Scenario 2: one of three parallel checks fails (fan-out/fan-in, ADR-0009) ===");
+var brokenChecksPipeline = CiCdPipelineFactory.Create(simulateChecksFailure: true);
 try
 {
-    await foreach (var _ in brokenBuildPipeline.RunAsync(Source(solution)))
+    await foreach (var _ in brokenChecksPipeline.RunAsync(Source(solution)))
     {
-        // Never reached — Test throws under FailFast, before Package or Notify run.
+        // Never reached — UnitTests/Lint/SecurityScan run concurrently via
+        // FanOutFilter; the merge function throws because not all three passed,
+        // and FailFast halts the pipeline before Package or Notify run.
     }
 }
 catch (PipelineExecutionException ex)
