@@ -9,13 +9,12 @@
 
   <ItemGroup>
     <!--
-      PLACEHOLDER package identity — architecture-vision.md §10 lists the final
-      package name as a still-open decision. For Phase 1 development, this resolves
-      against the local feed at ../../local-nuget-feed via an explicit `dotnet
-      restore --source` (see README.md "Trying the template locally") rather than
-      an ambient NuGet.config, since a repo-root config would affect every other
-      project's restore too. Swap the version constraint once a real published
-      version exists.
+      Package identity finalized per ADR-0010. Still resolves against the local
+      feed at ../../local-nuget-feed via an explicit `dotnet restore --source` (see
+      README.md "Trying the template locally") rather than an ambient NuGet.config,
+      since a repo-root config would affect every other project's restore too —
+      that's a packaging-workflow choice, unrelated to the naming decision. Swap
+      the version constraint once a real published version exists.
     -->
     <PackageReference Include="DotNetPipelineTemplate.Core" Version="1.0.0" />
   </ItemGroup>

@@ -14,12 +14,14 @@ Actions tab).
 
 ## Status
 
-**Phases 1, 2, and 3 are complete.** The core library (filter contract,
-fluent composition API, error-handling policies, fan-out/fan-in) is
-implemented and tested, organized as Clean Architecture layers. The
-Template Package installs and scaffolds a working project. Not yet done:
-general (non-1:1) fan-out/fan-in topologies, a declarative authoring
-layer, and the two still-open decisions noted below.
+**Phases 1, 2, and 3 are complete, and the template's naming/packaging
+identity and container conventions are finalized.** The core library
+(filter contract, fluent composition API, error-handling policies,
+fan-out/fan-in) is implemented and tested, organized as Clean
+Architecture layers. The Template Package installs and scaffolds a
+working project. Not yet done: general (non-1:1) fan-out/fan-in
+topologies, a declarative authoring layer, and (deliberately)
+distributed/multi-node execution — see "Known open decisions" below.
 
 ## Structure
 
@@ -208,17 +210,27 @@ be part of its distributed public API.
 
 ## Known open decisions (deliberately deferred, not forgotten)
 
-These are tracked in `architecture-vision.md` §10 in the Obsidian vault, not
-duplicated here in full — but they show up as literal `PLACEHOLDER` comments
-in this code wherever they matter:
+None remain at the architecture or packaging level as of ADR-0011 — see
+`architecture-vision.md` §10 in the Obsidian vault for the full record.
+For context, the ones that existed through Phase 3 and how they were
+closed:
 
-- Final `dotnet new` short name / package identity (currently `pipefilter` /
-  `DotNetPipelineTemplate.*` for all four packages)
-- Docker base image / multi-stage build conventions (a working first pass
-  exists in the template's `Dockerfile`)
-- Whether to include a reference sample filter — implemented as an actual
-  template parameter (`IncludeSampleFilter`, default `true`) rather than a
-  fixed yes/no, so the question doesn't need a single answer
+- Final `dotnet new` short name / package identity — finalized as
+  `pipefilter` / `DotNetPipelineTemplate.*` for all four packages, after
+  an actual nuget.org collision check (ADR-0010)
+- Docker base image / multi-stage build conventions — finalized as a
+  Debian-based (`mcr.microsoft.com/dotnet/runtime:10.0`) image running
+  as the non-root `app` user, chosen for debuggability across unknown
+  consumer domains over a smaller chiseled/distroless default
+  (ADR-0011)
+- Whether to include a reference sample filter — implemented as an
+  actual template parameter (`IncludeSampleFilter`, default `true`)
+  rather than a fixed yes/no, so the question didn't need a single
+  answer
+
+Phase 4 (distributed/multi-node execution) remains explicitly
+deferred — not an open question, a standing decision revisited only
+when a real consumer need emerges (`non-functional-requirements.md` §2).
 
 ## A design note worth reading before extending error handling
 

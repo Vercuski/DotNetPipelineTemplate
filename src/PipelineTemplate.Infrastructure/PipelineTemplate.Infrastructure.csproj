@@ -10,7 +10,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <!-- PLACEHOLDER package identity — see PipelineTemplate.Core.csproj for the full note. -->
+    <!-- Package identity finalized per ADR-0010. -->
     <PackageId>DotNetPipelineTemplate.Infrastructure</PackageId>
     <Version>1.0.0</Version>
     <Description>Reserved for technology-specific adapters (real observability backends, etc.) implementing Domain-layer ports. Currently empty.</Description>

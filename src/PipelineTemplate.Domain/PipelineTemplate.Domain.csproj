@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <!-- PLACEHOLDER package identity — see PipelineTemplate.Core.csproj for the full note. -->
+    <!-- Package identity finalized per ADR-0010. -->
     <PackageId>DotNetPipelineTemplate.Domain</PackageId>
     <Version>1.0.0</Version>
     <Description>Pure contracts and rules of the Pipes and Filters pattern — zero dependencies.</Description>
