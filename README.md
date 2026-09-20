@@ -79,10 +79,10 @@ dependency direction, and six tests validating the sample pipelines below.
 
 ## Trying the template locally
 
-The library isn't published to NuGet yet (the final package identity is one
-of the open decisions below), so local testing goes through a throwaway local
-feed instead of nuget.org. All four layer packages need packing, since Core's
-package now declares them as real dependencies:
+The library isn't published to NuGet — a deliberate choice, not an oversight
+(see `architecture-roadmap.md`) — so local testing goes through a throwaway
+local feed instead of nuget.org. All four layer packages need packing, since
+Core's package now declares them as real dependencies:
 
 ```bash
 # 1. Pack all four layers into a local feed
@@ -120,6 +120,48 @@ effect, either bump the version or clear the relevant folder(s) under
 `~/.nuget/packages/dotnetpipelinetemplate.*` and restore with `--force`. This
 bit us once already during development — a "successful" build turned out to
 be silently testing stale, pre-refactor code.
+
+### Smoke-testing the Dockerfile
+
+Since the packages aren't published, `docker build .` inside
+`templates/PipelineTemplate.Template/` fails with `NU1101` out of the box —
+Docker's build container has no access to your local dev feed by default.
+This isn't a bug in the Dockerfile; it's the same "packages aren't
+published" gap as above, surfacing through a different path. To smoke-test
+the Dockerfile itself (the non-root user switch, multi-stage copy, and
+entrypoint), temporarily stage the local feed alongside it — none of this
+should ever be committed:
+
+```bash
+cd templates/PipelineTemplate.Template
+cp -r ../../local-nuget-feed ./local-nuget-feed
+cat > NuGet.config << 'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+    <add key="local-test-feed" value="local-nuget-feed" />
+  </packageSources>
+</configuration>
+EOF
+```
+
+Then temporarily extend the Dockerfile's first `COPY` line to bring both
+along:
+
+```dockerfile
+COPY *.csproj NuGet.config .
+COPY local-nuget-feed ./local-nuget-feed
+RUN dotnet restore
+```
+
+Run `docker build .`, then revert the Dockerfile edit and delete
+`local-nuget-feed/` and `NuGet.config` from the template folder. This exact
+procedure caught a real bug once already: an XML comment in
+`PipelineApp.csproj` that spelled out the literal `--source` flag, which is
+invalid — XML comments can never contain a double-hyphen anywhere in their
+body, not just at the boundaries. Fixed, with a warning left in that file
+against reintroducing it.
 
 ## Trying the sample pipelines
 
@@ -222,7 +264,9 @@ closed:
   Debian-based (`mcr.microsoft.com/dotnet/runtime:10.0`) image running
   as the non-root `app` user, chosen for debuggability across unknown
   consumer domains over a smaller chiseled/distroless default
-  (ADR-0011)
+  (ADR-0011). Verified by two real `docker build` runs — the first
+  caught a genuine XML-comment bug in `PipelineApp.csproj` (fixed), the
+  second succeeded end to end
 - Whether to include a reference sample filter — implemented as an
   actual template parameter (`IncludeSampleFilter`, default `true`)
   rather than a fixed yes/no, so the question didn't need a single

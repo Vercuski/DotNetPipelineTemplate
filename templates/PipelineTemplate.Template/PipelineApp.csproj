@@ -10,11 +10,16 @@
   <ItemGroup>
     <!--
       Package identity finalized per ADR-0010. Still resolves against the local
-      feed at ../../local-nuget-feed via an explicit `dotnet restore --source` (see
-      README.md "Trying the template locally") rather than an ambient NuGet.config,
-      since a repo-root config would affect every other project's restore too —
-      that's a packaging-workflow choice, unrelated to the naming decision. Swap
-      the version constraint once a real published version exists.
+      feed at ../../local-nuget-feed via an explicit source flag on "dotnet restore"
+      (see README.md "Trying the template locally") rather than an ambient
+      NuGet.config, since a repo-root config would affect every other project's
+      restore too — that's a packaging-workflow choice, unrelated to the naming
+      decision. Swap the version constraint once a real published version exists.
+
+      Note for anyone editing this comment: XML comments cannot contain two
+      consecutive hyphens anywhere in their body (an XML 1.0 spec rule) — this
+      comment broke a real `docker build` once already by literally spelling out
+      the CLI flag with its double dash. Describe the flag, don't spell it out here.
     -->
     <PackageReference Include="DotNetPipelineTemplate.Core" Version="1.0.0" />
   </ItemGroup>

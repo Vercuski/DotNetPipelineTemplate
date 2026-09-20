@@ -14,7 +14,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY *.csproj .
+COPY *.csproj NuGet.config .
+COPY local-nuget-feed ./local-nuget-feed
 RUN dotnet restore
 
 COPY . .
